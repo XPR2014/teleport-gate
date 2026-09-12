@@ -1,0 +1,11 @@
+{
+  "block.teleport-gate.teleport_block": "Teleport Block",
+  "item.teleport-gate.teleport_block": "Teleport Block",
+  "screen.teleport-gate.teleport": "Teleport Gate",
+  "screen.teleport-gate.name": "Gate Name",
+  "screen.teleport-gate.name_label": "This Gate's Name:",
+  "screen.teleport-gate.save_name": "Save Name",
+  "screen.teleport-gate.saved": "Saved!",
+  "screen.teleport-gate.search": "Search gates...",
+  "screen.teleport-gate.empty": "No other gates"
+}

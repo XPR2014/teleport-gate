@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "teleport-gate",
+	"version": "${version}",
+	"name": "Teleport Gate",
+	"description": "",
+	"authors": [
+		"Monkey"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/teleport-gate/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"com.monkey.teleportgate.TeleportGate"
+		],
+		"client": [
+			"com.monkey.teleportgate.client.TeleportGateClient"
+		]
+	},
+	"mixins": [
+		"teleport-gate.mixins.json",
+		{
+			"config": "teleport-gate.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.19.5",
+		"minecraft": "~1.21.11",
+		"java": ">=21",
+		"fabric-api": "*"
+	}
+}

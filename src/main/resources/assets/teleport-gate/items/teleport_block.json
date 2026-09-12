@@ -1,0 +1,6 @@
+{
+  "model": {
+    "type": "minecraft:model",
+    "model": "teleport-gate:block/teleport_block"
+  }
+}
