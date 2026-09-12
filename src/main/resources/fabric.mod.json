@@ -3,13 +3,13 @@
 	"id": "teleport-gate",
 	"version": "${version}",
 	"name": "Teleport Gate",
-	"description": "",
+	"description": "Adds namable teleport blocks for free intra-dimension travel with multiplayer support. Features search bar, teleport cooldown, teleport particles and sound effects; duplicate name check, separate storage for each dimension, automatic timed data saving. Cheats not required.",
 	"authors": [
 		"Monkey"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"homepage": "https://modrinth.com/mod/teleportgate",
+		"sources": "https://github.com/XPR2014/teleport-gate"
 	},
 	"license": "MIT",
 	"icon": "assets/teleport-gate/icon.png",
