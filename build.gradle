@@ -80,3 +80,17 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+task sourceZip(type: Zip) {
+	archiveFileName = "${project.name}-sources-v${version}.zip"
+	from(project.rootDir) {
+		exclude 'build/**'
+		exclude '.gradle/**'
+		exclude 'run/**'
+		exclude '.idea/**'
+		exclude '.vscode/**'
+		exclude '*.iml'
+	}
+}
+
+

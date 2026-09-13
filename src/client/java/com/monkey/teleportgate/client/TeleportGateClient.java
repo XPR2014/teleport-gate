@@ -2,6 +2,7 @@ package com.monkey.teleportgate.client;
 
 import com.monkey.teleportgate.network.OpenTeleportScreenPayload;
 import com.monkey.teleportgate.network.RenamePointPayload;
+import com.monkey.teleportgate.network.RenameResultPayload;
 import com.monkey.teleportgate.network.TeleportListPayload;
 import com.monkey.teleportgate.network.TeleportPoint;
 import com.monkey.teleportgate.registry.ModBlocks;
@@ -44,6 +45,14 @@ public class TeleportGateClient implements ClientModInitializer {
                     Minecraft.getInstance().setScreen(
                             new TeleportScreen(payload.points(), payload.currentName())));
         });
+
+        ClientPlayNetworking.registerGlobalReceiver(RenameResultPayload.TYPE, (payload, context) -> {
+            Minecraft.getInstance().execute(() -> {
+                if (Minecraft.getInstance().screen instanceof TeleportScreen screen) {
+                    screen.onRenameResult(payload.success(), payload.reasonKey());
+                }
+            });
+        });
     }
 
     public static class TeleportScreen extends Screen {
@@ -51,13 +60,24 @@ public class TeleportGateClient implements ClientModInitializer {
         private static final int BORDER   = 0xFFA855F7;
         private static final int ACCENT   = 0xFFE9D5FF;
 
-        private final List<TeleportPoint> points;
+        private List<TeleportPoint> points;
         private final String currentName;
         private EditBox nameBox;
         private EditBox searchBox;
         private TeleportListWidget list;
         private Button saveBtn;
         private int saveTick = 0;
+
+        /** 把纯数字字符串转成翻译后的字面文字（给输入框用），其他原样返回 */
+        private static String displayNameText(String raw) {
+            if (raw != null && !raw.isEmpty() && raw.matches("\\d+")) {
+                return Component.translatable("screen.teleport-gate.auto_name", Integer.parseInt(raw)).getString();
+            }
+            return raw == null ? "" : raw;
+        }
+
+        private boolean originalIsAuto;
+        private String originalDisplayText;
 
         private int panelX, panelY, panelW, panelH;
 
@@ -77,22 +97,35 @@ public class TeleportGateClient implements ClientModInitializer {
             panelY = cy - panelH / 2;
             int bw = panelW - 28;
 
-            // 名字输入框
+            // 名字输入框：如果是自动名 __auto__N，显示翻译后的文字
             nameBox = new EditBox(this.font, panelX + 14, panelY + 28, bw, 16,
                     Component.translatable("screen.teleport-gate.name"));
             nameBox.setMaxLength(24);
-            nameBox.setValue(currentName == null ? "" : currentName);
+            originalIsAuto = currentName != null && currentName.matches("\\d+");
+            originalDisplayText = currentName == null ? "" : displayNameText(currentName);
+            nameBox.setValue(originalDisplayText);
             addRenderableWidget(nameBox);
 
             // 保存名字
             saveBtn = Button.builder(
                             Component.translatable("screen.teleport-gate.save_name"),
                             b -> {
-                                if (currentPos != null && !nameBox.getValue().trim().isEmpty()) {
-                                    ClientPlayNetworking.send(new RenamePointPayload(currentPos, nameBox.getValue().trim()));
-                                    saveBtn.setMessage(Component.translatable("screen.teleport-gate.saved"));
-                                    saveTick = 40; // 约2秒
+                                if (currentPos == null) return;
+                                String input = nameBox.getValue().trim();
+                                if (input.isEmpty()) {
+                                    saveBtn.setMessage(Component.translatable("screen.teleport-gate.save_empty"));
+                                    saveTick = 40;
+                                    return;
                                 }
+                                // 自动名没改 → 不发，提示未修改
+                                if (originalIsAuto && input.equals(originalDisplayText)) {
+                                    saveBtn.setMessage(Component.translatable("screen.teleport-gate.save_unchanged"));
+                                    saveTick = 40;
+                                    return;
+                                }
+                                ClientPlayNetworking.send(new RenamePointPayload(currentPos, input));
+                                saveBtn.setMessage(Component.translatable("screen.teleport-gate.saved"));
+                                saveTick = 40;
                             })
                     .bounds(panelX + 14, panelY + 48, bw, 16).build();
             addRenderableWidget(saveBtn);
@@ -157,6 +190,16 @@ public class TeleportGateClient implements ClientModInitializer {
                     saveBtn.setMessage(Component.translatable("screen.teleport-gate.save_name"));
                 }
             }
+        }
+
+        /** 服务端返回改名结果后更新按钮文字 */
+        void onRenameResult(boolean success, String reasonKey) {
+            if (success) {
+                saveBtn.setMessage(Component.translatable("screen.teleport-gate.saved"));
+            } else {
+                saveBtn.setMessage(Component.translatable("screen.teleport-gate.save_failed"));
+            }
+            saveTick = 60; // 3秒
         }
 
         @Override

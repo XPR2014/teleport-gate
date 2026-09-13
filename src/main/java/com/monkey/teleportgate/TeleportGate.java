@@ -5,6 +5,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.monkey.teleportgate.network.OpenTeleportScreenPayload;
 import com.monkey.teleportgate.network.RenamePointPayload;
+import com.monkey.teleportgate.network.RenameResultPayload;
 import com.monkey.teleportgate.network.TeleportListPayload;
 import com.monkey.teleportgate.network.TeleportPoint;
 import com.monkey.teleportgate.network.TeleportToPayload;
@@ -53,7 +54,7 @@ public class TeleportGate implements ModInitializer {
 	/** 玩家上次传送时间 tick */
 	private static final Map<UUID, Long> LAST_TELEPORT = new ConcurrentHashMap<>();
 	private static final long COOLDOWN_TICKS = 100; // 5秒
-	private static int counter = 0;
+	private static final java.util.concurrent.atomic.AtomicInteger counter = new java.util.concurrent.atomic.AtomicInteger(0);
 	private static int tickCounter = 0;
 	private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 	private static Path saveFile;
@@ -82,8 +83,9 @@ public class TeleportGate implements ModInitializer {
 	public static void addPoint(ServerLevel level, BlockPos pos) {
 		String dim = dimId(level.dimension());
 		String key = posKey(pos);
+		// 直接存数字字符串，客户端看到纯数字就翻译成"传送方块 N"
 		POINTS.computeIfAbsent(dim, k -> new ConcurrentHashMap<>())
-				.putIfAbsent(key, "传送方块 " + (++counter));
+				.putIfAbsent(key, String.valueOf(counter.incrementAndGet()));
 		dirty = true;
 	}
 
@@ -134,9 +136,20 @@ public class TeleportGate implements ModInitializer {
 			Map<String, Map<String, String>> loaded = GSON.fromJson(json, t);
 			POINTS.clear();
 			if (loaded != null) POINTS.putAll(loaded);
-			LOGGER.info("[TeleportGate] loaded {} dims, {} points",
+			// 恢复 counter：扫描已有纯数字名字，把 counter 推到最大值，避免重启重号
+			int maxN = 0;
+			for (var m : POINTS.values()) {
+				for (String name : m.values()) {
+					if (name != null && !name.isEmpty() && name.matches("\\d+")) {
+						maxN = Math.max(maxN, Integer.parseInt(name));
+					}
+				}
+			}
+			counter.set(maxN);
+			LOGGER.info("[TeleportGate] loaded {} dims, {} points, next number = {}",
 					POINTS.size(),
-					POINTS.values().stream().mapToInt(Map::size).sum());
+					POINTS.values().stream().mapToInt(Map::size).sum(),
+					maxN + 1);
 		} catch (IOException e) {
 			LOGGER.error("[TeleportGate] failed to load points", e);
 		}
@@ -157,6 +170,7 @@ public class TeleportGate implements ModInitializer {
 		PayloadTypeRegistry.playC2S().register(TeleportToPayload.TYPE, TeleportToPayload.CODEC);
 		PayloadTypeRegistry.playC2S().register(RenamePointPayload.TYPE, RenamePointPayload.CODEC);
 		PayloadTypeRegistry.playS2C().register(TeleportListPayload.TYPE, TeleportListPayload.CODEC);
+		PayloadTypeRegistry.playS2C().register(RenameResultPayload.TYPE, RenameResultPayload.CODEC);
 
 		ServerPlayNetworking.registerGlobalReceiver(OpenTeleportScreenPayload.TYPE, (payload, context) -> {
 			ServerPlayer player = context.player();
@@ -185,13 +199,13 @@ public class TeleportGate implements ModInitializer {
 						.flatMap(m -> m.values().stream())
 						.anyMatch(n -> n.equalsIgnoreCase(name));
 				if (dup) {
-					player.displayClientMessage(Component.literal("名字已被使用：" + name), true);
+					ServerPlayNetworking.send(player, new RenameResultPayload(false, "screen.teleport-gate.full_of_name"));
 					return;
 				}
 				POINTS.computeIfAbsent(dim, k -> new ConcurrentHashMap<>())
 						.put(posKey(payload.pos()), name);
 				dirty = true;
-				player.displayClientMessage(Component.literal("名字已保存：" + name), true);
+				ServerPlayNetworking.send(player, new RenameResultPayload(true, ""));
 			});
 		});
 
@@ -204,7 +218,7 @@ public class TeleportGate implements ModInitializer {
 				Long last = LAST_TELEPORT.get(player.getUUID());
 				if (last != null && now - last < COOLDOWN_TICKS) {
 					long left = (COOLDOWN_TICKS - (now - last)) / 20 + 1;
-					player.displayClientMessage(Component.literal("传送冷却中：" + left + "秒"), true);
+					player.displayClientMessage(Component.translatable("screen.teleport-gate.teleport_pause", left), true);
 					return;
 				}
 
@@ -218,11 +232,11 @@ public class TeleportGate implements ModInitializer {
 					}
 				}
 				if (targetDim == null || !targetDim.equals(playerDim)) {
-					player.displayClientMessage(Component.literal("不能跨维度传送！"), true);
+					player.displayClientMessage(Component.translatable("screen.teleport-gate.teleport_other_worlds"), true);
 					return;
 				}
 				ServerLevel sl = (ServerLevel) player.level();
-				double tx = target.getX() + 0.5, ty = target.getY(), tz = target.getZ() + 0.5;
+				double tx = target.getX() + 0.5, ty = target.getY() + 0.5, tz = target.getZ() + 0.5;
 				player.teleportTo(sl, tx, ty, tz,
 						Set.of(), player.getYRot(), player.getXRot(), true);
 				LAST_TELEPORT.put(player.getUUID(), now);

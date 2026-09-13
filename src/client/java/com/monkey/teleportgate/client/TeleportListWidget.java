@@ -9,6 +9,7 @@ import net.minecraft.client.gui.components.AbstractSelectionList;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 
 import java.util.List;
 
@@ -28,6 +29,16 @@ public class TeleportListWidget extends AbstractSelectionList<TeleportListWidget
         for (TeleportPoint p : points) {
             this.addEntry(new Entry(p));
         }
+    }
+
+    /** 把服务端返回的名字字符串转成可渲染的 Component。
+     *  纯数字 "1","2","3" -> 翻译键 item.teleport-gate.teleport_block + N
+     *  其他               -> 玩家自定义名字，直接字面显示 */
+    private static MutableComponent displayName(String raw) {
+        if (raw != null && !raw.isEmpty() && raw.matches("\\d+")) {
+            return Component.translatable("screen.teleport-gate.auto_name", Integer.parseInt(raw));
+        }
+        return Component.literal(raw == null ? "" : raw);
     }
 
     protected int getMaxPosition() {
@@ -51,13 +62,15 @@ public class TeleportListWidget extends AbstractSelectionList<TeleportListWidget
             if (p.sameDimension()) {
                 g.fill(left, y, left + this.getRowWidth(), y + ITEM_HEIGHT - 2,
                         hover ? 0xCC8B5CF6 : 0xCC6D28D9);
-                g.drawString(this.minecraft.font, p.name(), left + 6, y + 4, 0xFFFFFFFF, false);
+                g.drawString(this.minecraft.font, displayName(p.name()), left + 6, y + 4, 0xFFFFFFFF, false);
                 String coord = p.pos().getX() + ", " + p.pos().getY() + ", " + p.pos().getZ();
                 g.drawString(this.minecraft.font, coord, left + 6, y + 13, 0xFFD8B4FE, false);
             } else {
-                // 跨维度：灰色
+                // 跨维度：灰色，名字 + [其他维度] 后缀
                 g.fill(left, y, left + this.getRowWidth(), y + ITEM_HEIGHT - 2, 0x55444444);
-                g.drawString(this.minecraft.font, p.name() + " (其他维度)", left + 6, y + 4, 0xFF888888, false);
+                Component label = displayName(p.name())
+                        .append(Component.translatable("screen.teleport-gate.other_worlds"));
+                g.drawString(this.minecraft.font, label, left + 6, y + 4, 0xFF888888, false);
                 String coord = p.pos().getX() + ", " + p.pos().getY() + ", " + p.pos().getZ();
                 g.drawString(this.minecraft.font, coord, left + 6, y + 13, 0xFF666666, false);
             }
@@ -84,7 +97,7 @@ public class TeleportListWidget extends AbstractSelectionList<TeleportListWidget
             if (event.button() == 0) {
                 if (!point.sameDimension()) {
                     Minecraft.getInstance().player.displayClientMessage(
-                            Component.literal("不能跨维度传送！"), true);
+                            Component.translatable("screen.teleport-gate.teleport_other_worlds"), true);
                     return true;
                 }
                 ClientPlayNetworking.send(new TeleportToPayload(point.pos()));

@@ -1,11 +1,19 @@
 {
   "block.teleport-gate.teleport_block": "Teleport Block",
   "item.teleport-gate.teleport_block": "Teleport Block",
+  "screen.teleport-gate.auto_name": "Teleport Block %s",
   "screen.teleport-gate.teleport": "Teleport Gate",
   "screen.teleport-gate.name": "Gate Name",
   "screen.teleport-gate.name_label": "This Gate's Name:",
   "screen.teleport-gate.save_name": "Save Name",
-  "screen.teleport-gate.saved": "Saved!",
+  "screen.teleport-gate.saved": "Name Saved!",
   "screen.teleport-gate.search": "Search gates...",
-  "screen.teleport-gate.empty": "No other gates"
+  "screen.teleport-gate.empty": "No other gates",
+  "screen.teleport-gate.other_worlds": "Other dimensions",
+  "screen.teleport-gate.teleport_other_worlds": "Cannot teleport across dimensions!",
+  "screen.teleport-gate.full_of_name": "The name is already taken: %s",
+  "screen.teleport-gate.teleport_pause": "Teleport on cooldown: %ss",
+  "screen.teleport-gate.save_empty": "Name cannot be empty!",
+  "screen.teleport-gate.save_unchanged": "Name not changed",
+  "screen.teleport-gate.save_failed": "Save failed: name taken!"
 }

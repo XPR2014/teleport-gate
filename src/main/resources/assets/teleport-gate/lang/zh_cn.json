@@ -1,11 +1,19 @@
 {
   "block.teleport-gate.teleport_block": "传送方块",
   "item.teleport-gate.teleport_block": "传送方块",
+  "screen.teleport-gate.auto_name": "传送方块 %s",
   "screen.teleport-gate.teleport": "定点传送",
   "screen.teleport-gate.name": "门的名字",
   "screen.teleport-gate.name_label": "本门名字:",
   "screen.teleport-gate.save_name": "保存名字",
-  "screen.teleport-gate.saved": "已保存！",
+  "screen.teleport-gate.saved": "名字已保存！",
   "screen.teleport-gate.search": "搜索传送点...",
-  "screen.teleport-gate.empty": "还没有其他传送方块"
+  "screen.teleport-gate.empty": "还没有其他传送方块",
+  "screen.teleport-gate.other_worlds": "其他维度",
+  "screen.teleport-gate.teleport_other_worlds": "不能跨维度传送！",
+  "screen.teleport-gate.full_of_name": "名字已被使用：%s",
+  "screen.teleport-gate.teleport_pause": "传送冷却中：%s秒",
+  "screen.teleport-gate.save_empty": "名字不能为空！",
+  "screen.teleport-gate.save_unchanged": "未修改名字",
+  "screen.teleport-gate.save_failed": "保存失败：重名！"
 }

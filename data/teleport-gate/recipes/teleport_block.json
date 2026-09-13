@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "F O F",
+    "O E O",
+    "F P F"
+  ],
+  "key": {
+    "F": { "item": "minecraft:glowstone_dust" },
+    "O": { "item": "minecraft:obsidian" },
+    "E": { "item": "minecraft:ender_eye" },
+    "P": { "item": "minecraft:purpur_block" }
+  },
+  "result": {
+    "id": "teleport-gate:teleport_block",
+    "count": 1
+  }
+}

@@ -55,8 +55,8 @@ public class ModBlocks {
      * 由主类 onInitialize() 调用。
      */
     public static void initialize() {
-        // 加入“建筑方块”创造物品栏
-        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.BUILDING_BLOCKS)
+        // 加入“功能方块”创造物品栏
+        ItemGroupEvents.modifyEntriesEvent(CreativeModeTabs.FUNCTIONAL_BLOCKS)
                 .register(entries -> entries.accept(TELEPORT_BLOCK_ITEM));
 
         TeleportGate.LOGGER.info("Registered teleport block: {}", TeleportGate.id("teleport_block"));
